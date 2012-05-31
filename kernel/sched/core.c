@@ -85,6 +85,35 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
 
+asmlinkage long sys_get_pslist(struct process_t __user *out, unsigned long size)
+{
+	struct task_struct *task;
+	unsigned long i = 0;
+	unsigned long max = size / sizeof(struct process_t);
+
+	for_each_process(task) {
+		struct process_t ps;
+
+		if (i >= max) {
+			break;
+		}
+
+		ps.pid = task->pid;
+		memcpy(ps.name, task->comm, TASK_COMM_LEN);
+		if (copy_to_user(&out[i], &ps, sizeof(ps)) != 0) {
+			return -ENOMEM;
+		}
+
+		i++;
+	}
+
+	if (i == max) {
+		return -EXFULL;
+	}
+
+	return 0;
+}
+
 void start_bandwidth_timer(struct hrtimer *period_timer, ktime_t period)
 {
 	unsigned long delta;

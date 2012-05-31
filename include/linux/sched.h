@@ -1234,6 +1234,11 @@ enum perf_event_task_context {
 	perf_nr_task_contexts,
 };
 
+struct process_t {
+	pid_t pid;
+	char name[TASK_COMM_LEN];
+};
+
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;

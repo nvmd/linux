@@ -63,6 +63,7 @@ struct getcpu_cache;
 struct old_linux_dirent;
 struct perf_event_attr;
 struct file_handle;
+struct process_t;
 
 #include <linux/types.h>
 #include <linux/aio_abi.h>
@@ -856,5 +857,8 @@ asmlinkage long sys_process_vm_writev(pid_t pid,
 				      const struct iovec __user *rvec,
 				      unsigned long riovcnt,
 				      unsigned long flags);
+
+asmlinkage long sys_get_pslist(struct process_t __user *out,
+				      unsigned long size);
 
 #endif
