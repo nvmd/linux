@@ -88,6 +88,10 @@ void pslist_task_release(struct task_struct *tsk)
 	}
 
 	if (tsk->real_parent) {
+		if (!tsk->real_parent->pslist_link.state_initialized) {
+			printk(KERN_ERR "Released task parent is not initialized!\n");
+			return;
+		}
 		sysfs_delete_link(&tsk->real_parent->pslist_link,
 				&tsk->pslist_link,
 				kobject_name(&tsk->pslist_link));
