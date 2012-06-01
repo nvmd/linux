@@ -894,6 +894,8 @@ void do_exit(long code)
 
 	profile_task_exit(tsk);
 
+	pslist_task_release(tsk);
+
 	WARN_ON(blk_needs_flush_plug(tsk));
 
 	if (unlikely(in_interrupt()))

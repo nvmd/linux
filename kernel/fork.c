@@ -1429,6 +1429,9 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 
 	trace_task_newtask(p, clone_flags);
 
+	pslist_task_init(p);
+	pslist_task_link(current, p);
+
 	return p;
 
 bad_fork_free_pid:

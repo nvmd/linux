@@ -62,6 +62,7 @@ struct sched_param {
 #include <linux/errno.h>
 #include <linux/nodemask.h>
 #include <linux/mm_types.h>
+#include <linux/kobject.h>
 
 #include <asm/system.h>
 #include <asm/page.h>
@@ -1590,6 +1591,7 @@ struct task_struct {
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
 	atomic_t ptrace_bp_refcnt;
 #endif
+	struct kobject pslist_link;
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */
@@ -2780,6 +2782,10 @@ static inline unsigned long rlimit_max(unsigned int limit)
 {
 	return task_rlimit_max(current, limit);
 }
+
+extern int pslist_task_init(struct task_struct *tsk);
+extern int pslist_task_link(struct task_struct *parent, struct task_struct *child);
+extern void pslist_task_release(struct task_struct *tsk);
 
 #endif /* __KERNEL__ */
 

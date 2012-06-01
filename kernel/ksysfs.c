@@ -189,6 +189,8 @@ static struct attribute_group kernel_attr_group = {
 	.attrs = kernel_attrs,
 };
 
+extern int pslist_ksysfs_init(void);
+
 static int __init ksysfs_init(void)
 {
 	int error;
@@ -207,6 +209,10 @@ static int __init ksysfs_init(void)
 		error = sysfs_create_bin_file(kernel_kobj, &notes_attr);
 		if (error)
 			goto group_exit;
+	}
+
+	if (pslist_ksysfs_init()) {
+		printk(KERN_WARNING "Can't initialize pslist\n");
 	}
 
 	return 0;
