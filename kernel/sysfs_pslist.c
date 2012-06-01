@@ -46,12 +46,14 @@ int pslist_task_init(struct task_struct *child)
 	
 	memset(&child->pslist_link, 0, sizeof(struct kobject));
 
-	kobject_init(&child->pslist_link, &process_kobj_type);
-	result = kobject_add(&child->pslist_link, &pslist_root_kobj, "%d", child->pid);
-	if (result) {
-		printk(KERN_ERR "Can't add child process to the pslist tree\n");
-		kobject_put(&child->pslist_link);
-		return result;
+	if (pslist_root_kobj.state_initialized) {
+		kobject_init(&child->pslist_link, &process_kobj_type);
+		result = kobject_add(&child->pslist_link, &pslist_root_kobj, "%d", child->pid);
+		if (result) {
+			printk(KERN_ERR "Can't add child process to the pslist tree\n");
+			kobject_put(&child->pslist_link);
+			return result;
+		}
 	}
 
 	return 0;
@@ -60,7 +62,7 @@ int pslist_task_init(struct task_struct *child)
 int pslist_task_link(struct task_struct *parent, struct task_struct *child)
 {
 	int result;
-	if (kernel_kobj->state_initialized) {
+	if (pslist_root_kobj.state_initialized) {
 		result = sysfs_create_link(&parent->pslist_link, 
 					&child->pslist_link, 
 					kobject_name(&child->pslist_link));
@@ -68,9 +70,6 @@ int pslist_task_link(struct task_struct *parent, struct task_struct *child)
 			printk(KERN_ERR "Can't create sysfs link between child and parent processes");
 			return result;
 		}
-	} else {
-		// TODO: save link information somewhere, or decide to recreate this information
-		// in pslist_ksysfs_init
 	}
 
 	return 0;
@@ -78,17 +77,22 @@ int pslist_task_link(struct task_struct *parent, struct task_struct *child)
 
 void pslist_task_release(struct task_struct *tsk)
 {
-	kobject_del(&tsk->pslist_link);
-	kobject_put(&tsk->pslist_link);
+	// tsk->pslist_link can be uninitialized in case the task 
+	// is created and relased before pslist initialization
+	if (tsk->pslist_link.state_initialized) {
+		kobject_del(&tsk->pslist_link);
+		kobject_put(&tsk->pslist_link);
+	}
 }
 
 /**
  *	pslist_ksysfs_init - to be called right after ksysfs initialization
  */
-int pslist_ksysfs_init(void)
+int __init pslist_ksysfs_init(void)
 {
 	int result;
 
+	kobject_init(&pslist_root_kobj, &pslist_root_kobj_type);
 	result = kobject_add(&pslist_root_kobj, kernel_kobj, "pslist");
 	if (result) {
 		printk(KERN_ERR "Can't add PSList root KObject to KSysFS\n");
@@ -96,17 +100,8 @@ int pslist_ksysfs_init(void)
 		return result;
 	}
 
-	// TODO: create sysfs symlinks between parent-child pslist nodes
+	// TODO: create ksysfs nodes for processes started earlier
 
 	return 0;
 }
-
-static __init int pslist_init(void)
-{
-	kobject_init(&pslist_root_kobj, &pslist_root_kobj_type);
-
-	return 0;
-}
-
-core_initcall(pslist_init);
 
