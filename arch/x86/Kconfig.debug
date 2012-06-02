@@ -5,6 +5,15 @@ config TRACE_IRQFLAGS_SUPPORT
 
 source "lib/Kconfig.debug"
 
+config NETLINK_PSLIST
+	tristate "Process information access through Netlink interface"
+	default m
+	---help---
+	  Process information access through Netlink interface:
+	  * Process list
+	  * Task group process list
+	  * Process command name by process pid
+
 config STRICT_DEVMEM
 	bool "Filter access to /dev/mem"
 	---help---
