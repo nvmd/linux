@@ -133,9 +133,14 @@ int main(int argc, char **argv)
 	struct sockaddr_nl sockaddr;
 	int sock;
 	int user_req;
-	int (*user_req_table[3])(int,struct sockaddr_nl*,pid_t);
+	int (*user_req_table[])(int,struct sockaddr_nl*,pid_t) = {
+						request_proc_list,
+						request_group_threads_list,
+						request_proc_comm};
 	pid_t pid;
 	int result;
+	
+	result = 0;
 
 	if (argc > 3 || argc < 2) {
 		print_usage(argv[0]);
@@ -148,7 +153,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	if (user_req > 0 && argc != 3) {
+	if ((user_req > 0 && argc != 3) || (user_req == 0 && argc != 2)) {
 		print_usage(argv[0]);
 		return -1;
 	}
@@ -159,10 +164,6 @@ int main(int argc, char **argv)
 		pid = atoi(argv[1]);
 	}
 	
-	user_req_table[0] = request_proc_list;
-	user_req_table[1] = request_group_threads_list;
-	user_req_table[2] = request_proc_comm;
-
 	sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_PSLIST);
 	if (sock < 0) {
 		perror("socket");
@@ -182,9 +183,10 @@ int main(int argc, char **argv)
 	result = user_req_table[user_req](sock, &sockaddr, pid);
 	if (result < 0) {
 		printf("Can't complete user request\n");
+		return result;
 	}
 	close(sock);
 
-	return 0;
+	return result;
 }
 
